@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; }
+  .msg { margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 0.9rem; white-space: pre-wrap; }
+  .ok { background: #d4f8d4; color: #1a5d1a; }
+  .err { background: #fbd4d4; color: #7a1a1a; }
+  button { padding: 8px 16px; cursor: pointer; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <h1>Protected Dashboard</h1>
+  <p>Every request to this page's data is signed in-browser with the session's bound private key.</p>
+  <button id="loadBtn">Call protected /api/dashboard</button>
+  <div id="output" class="msg" style="display:none"></div>
+
+  <script src="/js/crypto-session.js"></script>
+  <script>
+    const out = document.getElementById('output');
+    function show(text, ok) {
+      out.style.display = 'block';
+      out.className = 'msg ' + (ok ? 'ok' : 'err');
+      out.textContent = text;
+    }
+
+    async function callDashboard() {
+      try {
+        const headers = await SecureSession.getSignedHeaders();
+        const res = await fetch('/api/dashboard', { headers });
+        const data = await res.json();
+        show(JSON.stringify(data, null, 2), res.ok);
+      } catch (e) {
+        show('Error: ' + e.message, false);
+      }
+    }
+
+    document.getElementById('loadBtn').onclick = callDashboard;
+    // auto-load on page open
+    callDashboard();
+  </script>
+</body>
+</html>
